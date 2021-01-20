@@ -785,11 +785,218 @@ void CPhysEnv::MidPointIntegrate( float DeltaTime)
 void CPhysEnv::HeunIntegrate( float DeltaTime)
 {
 	// TODO
+	
+	System cur(m_CurrentSys, m_ParticleCnt);
+	//System targetSys(m_TargetSys, m_ParticleCnt);
+	System temp(m_ParticleCnt);
+	System avgsys(m_ParticleCnt);
+	double epsilon;
+	double err=0;
+	// Do one step of integration to calculate intermediate prediction
+	IntegrateSysOverTime(cur, cur, temp, DeltaTime);
+
+	//Corrective iterations
+	//At least one iteration will be done
+	epsilon = 1;
+	do
+	{
+		//This is to keep track of previous step
+		temp.fillOut(m_TargetSys);
+
+		// Update the derivatives
+		ComputeForces(temp);
+
+		// Take the average of the two derivatives 
+		// Here we can use the overloaded operators in System.h
+		avgsys = (cur + temp) / 2.0f;
+
+		// Re-calculate the target
+		IntegrateSysOverTime(cur, avgsys, temp, DeltaTime);
+		
+		
+		
+		//Evaluate convergence criterion
+		// epsilon = (current system positions - previous system positions)/(current system positions)
+		for (int i = 0; i < m_ParticleCnt; i++)
+		{
+			err = 0;
+			tParticle* p1;   //Current Calculated Particles
+			tParticle* p2;   //Previous Calculated Particles
+			p1 = temp;
+			p2 = m_TargetSys;
+			tVector cur_pos, prev_pos;  //Current and Previous Position vectors
+			cur_pos = p1->pos;
+			prev_pos = m_TargetSys->pos;
+			err += sqrt(VectorSquaredDistance(&cur_pos, &prev_pos))/ m_ParticleCnt; //Accumulate the change over all system of particles
+
+			p1++;
+			p2++;
+
+		}
+		//Set the final epsion to the accumulated value
+		epsilon = err;
+	}
+	while (epsilon > 0.001);
+
+	temp.fillOut(m_TargetSys);
+
+
 }
 
 void CPhysEnv::RK4Integrate( float DeltaTime)
 {
 	// TODO
+	/// Local Variables ///////////////////////////////////////////////////////////   
+	int loop;
+	float       halfDeltaT, sixthDeltaT;
+	tParticle* source, * target, * accum1, * accum2, * accum3, * accum4;
+	///////////////////////////////////////////////////////////////////////////////   
+	halfDeltaT = DeltaTime / 2.0f;      // SOME TIME VALUES I WILL NEED   
+	sixthDeltaT = 1.0f / 6.0f;
+
+	// FIRST STEP   
+	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
+	target = m_TempSys[0];  // TEMP STORAGE FOR NEW POSITION   
+	accum1 = m_TempSys[1];  // ACCUMULATE THE INTEGRATED VALUES   
+	for (loop = 0; loop < m_ParticleCnt; loop++)
+	{
+		accum1->f.x = halfDeltaT * source->f.x * source->oneOverM;
+		accum1->f.y = halfDeltaT * source->f.y * source->oneOverM;
+		accum1->f.z = halfDeltaT * source->f.z * source->oneOverM;
+
+		accum1->v.x = halfDeltaT * source->v.x;
+		accum1->v.y = halfDeltaT * source->v.y;
+		accum1->v.z = halfDeltaT * source->v.z;
+		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE OVER 1/2 TIME   
+		target->v.x = source->v.x + (accum1->f.x);
+		target->v.y = source->v.y + (accum1->f.y);
+		target->v.z = source->v.z + (accum1->f.z);
+
+		target->oneOverM = source->oneOverM;
+
+		// SET THE NEW POSITION   
+		target->pos.x = source->pos.x + (accum1->v.x);
+		target->pos.y = source->pos.y + (accum1->v.y);
+		target->pos.z = source->pos.z + (accum1->v.z);
+
+		source++;
+		target++;
+		accum1++;
+	}
+
+	ComputeForces(m_TempSys[0]);  // COMPUTE THE NEW FORCES   
+
+	// SECOND STEP   
+	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
+	target = m_TempSys[0];  // TEMP STORAGE FOR NEW POSITION   
+	accum1 = m_TempSys[2];  // ACCUMULATE THE INTEGRATED VALUES   
+	for (loop = 0; loop < m_ParticleCnt; loop++)
+	{
+		accum1->f.x = halfDeltaT * target->f.x * source->oneOverM;
+		accum1->f.y = halfDeltaT * target->f.y * source->oneOverM;
+		accum1->f.z = halfDeltaT * target->f.z * source->oneOverM;
+		accum1->v.x = halfDeltaT * target->v.x;
+		accum1->v.y = halfDeltaT * target->v.y;
+		accum1->v.z = halfDeltaT * target->v.z;
+
+		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE   
+		target->v.x = source->v.x + (accum1->f.x);
+		target->v.y = source->v.y + (accum1->f.y);
+		target->v.z = source->v.z + (accum1->f.z);
+
+		target->oneOverM = source->oneOverM;
+
+		// SET THE NEW POSITION   
+		target->pos.x = source->pos.x + (accum1->v.x);
+		target->pos.y = source->pos.y + (accum1->v.y);
+		target->pos.z = source->pos.z + (accum1->v.z);
+
+		source++;
+		target++;
+		accum1++;
+	}
+
+	ComputeForces(m_TempSys[0]);  // COMPUTE THE NEW FORCES   
+
+	// THIRD STEP   
+	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
+	target = m_TempSys[0];  // TEMP STORAGE FOR NEW POSITION   
+	accum1 = m_TempSys[3];  // ACCUMULATE THE INTEGRATED VALUES   
+	for (loop = 0; loop < m_ParticleCnt; loop++)
+	{
+		// NOTICE I USE THE FULL DELTATIME THIS STEP   
+		accum1->f.x = DeltaTime * target->f.x * source->oneOverM;
+		accum1->f.y = DeltaTime * target->f.y * source->oneOverM;
+		accum1->f.z = DeltaTime * target->f.z * source->oneOverM;
+		accum1->v.x = DeltaTime * target->v.x;
+		accum1->v.y = DeltaTime * target->v.y;
+		accum1->v.z = DeltaTime * target->v.z;
+
+		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE   
+		target->v.x = source->v.x + (accum1->f.x);
+		target->v.y = source->v.y + (accum1->f.y);
+		target->v.z = source->v.z + (accum1->f.z);
+
+		target->oneOverM = source->oneOverM;
+
+		// SET THE NEW POSITION   
+		target->pos.x = source->pos.x + (accum1->v.x);
+		target->pos.y = source->pos.y + (accum1->v.y);
+		target->pos.z = source->pos.z + (accum1->v.z);
+
+		source++;
+		target++;
+		accum1++;
+	}
+
+	ComputeForces(m_TempSys[0]);  // COMPUTE THE NEW FORCES   
+
+	// FOURTH STEP   
+	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
+	target = m_TempSys[0];  // TEMP STORAGE FOR NEW POSITION   
+	accum1 = m_TempSys[4];  // ACCUMULATE THE INTEGRATED VALUES   
+	for (loop = 0; loop < m_ParticleCnt; loop++)
+	{
+		// NOTICE I USE THE FULL DELTATIME THIS STEP   
+		accum1->f.x = DeltaTime * target->f.x * source->oneOverM;
+		accum1->f.y = DeltaTime * target->f.y * source->oneOverM;
+		accum1->f.z = DeltaTime * target->f.z * source->oneOverM;
+
+		accum1->v.x = DeltaTime * target->v.x;
+		accum1->v.y = DeltaTime * target->v.y;
+		accum1->v.z = DeltaTime * target->v.z;
+
+		// THIS TIME I DON'T NEED TO COMPUTE THE TEMPORARY POSITIONS   
+		source++;
+		target++;
+		accum1++;
+	}
+
+	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
+	target = m_TargetSys;
+	accum1 = m_TempSys[1];
+	accum2 = m_TempSys[2];
+	accum3 = m_TempSys[3];
+	accum4 = m_TempSys[4];
+	for (loop = 0; loop < m_ParticleCnt; loop++)
+	{
+		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE USING RK4 FORMULA   
+		target->v.x = source->v.x + ((accum1->f.x + ((accum2->f.x + accum3->f.x) * 2.0f) + accum4->f.x) * sixthDeltaT);
+		target->v.y = source->v.y + ((accum1->f.y + ((accum2->f.y + accum3->f.y) * 2.0f) + accum4->f.y) * sixthDeltaT);
+		target->v.z = source->v.z + ((accum1->f.z + ((accum2->f.z + accum3->f.z) * 2.0f) + accum4->f.z) * sixthDeltaT);
+		// DETERMINE THE NEW POSITION FOR THE PARTICLE USING RK4 FORMULA   
+		target->pos.x = source->pos.x + ((accum1->v.x + ((accum2->v.x + accum3->v.x) * 2.0f) + accum4->v.x) * sixthDeltaT);
+		target->pos.y = source->pos.y + ((accum1->v.y + ((accum2->v.y + accum3->v.y) * 2.0f) + accum4->v.y) * sixthDeltaT);
+		target->pos.z = source->pos.z + ((accum1->v.z + ((accum2->v.z + accum3->v.z) * 2.0f) + accum4->v.z) * sixthDeltaT);
+
+		source++;
+		target++;
+		accum1++;
+		accum2++;
+		accum3++;
+		accum4++;
+	}
+
 }
 
 void CPhysEnv::RK5Integrate(float DeltaTime)
