@@ -787,7 +787,6 @@ void CPhysEnv::HeunIntegrate( float DeltaTime)
 	// TODO
 	
 	System cur(m_CurrentSys, m_ParticleCnt);
-	//System targetSys(m_TargetSys, m_ParticleCnt);
 	System temp(m_ParticleCnt);
 	System avgsys(m_ParticleCnt);
 	double epsilon;
@@ -826,21 +825,19 @@ void CPhysEnv::HeunIntegrate( float DeltaTime)
 			p2 = m_TargetSys;
 			tVector cur_pos, prev_pos;  //Current and Previous Position vectors
 			cur_pos = p1->pos;
-			prev_pos = m_TargetSys->pos;
+			prev_pos = p2->pos;
 			err += sqrt(VectorSquaredDistance(&cur_pos, &prev_pos))/ m_ParticleCnt; //Accumulate the change over all system of particles
 
 			p1++;
 			p2++;
 
 		}
-		//Set the final epsion to the accumulated value
+		//Set the final epsilon to the accumulated value
 		epsilon = err;
 	}
 	while (epsilon > 0.001);
 
 	temp.fillOut(m_TargetSys);
-
-
 }
 
 void CPhysEnv::RK4Integrate( float DeltaTime)
@@ -850,11 +847,19 @@ void CPhysEnv::RK4Integrate( float DeltaTime)
 	int loop;
 	float       halfDeltaT, sixthDeltaT;
 	tParticle* source, * target, * accum1, * accum2, * accum3, * accum4;
+	System cur(m_CurrentSys, m_ParticleCnt);
+	System k1(m_ParticleCnt);
+	System k2(m_ParticleCnt);
+	System k3(m_ParticleCnt);
+	System k4(m_ParticleCnt);
 	///////////////////////////////////////////////////////////////////////////////   
 	halfDeltaT = DeltaTime / 2.0f;      // SOME TIME VALUES I WILL NEED   
 	sixthDeltaT = 1.0f / 6.0f;
 
-	// FIRST STEP   
+	// K1
+	IntegrateSysOverTime(cur, cur, k1, DeltaTime);
+	ComputeForces(k1);
+
 	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
 	target = m_TempSys[0];  // TEMP STORAGE FOR NEW POSITION   
 	accum1 = m_TempSys[1];  // ACCUMULATE THE INTEGRATED VALUES   
