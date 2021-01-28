@@ -844,163 +844,35 @@ void CPhysEnv::RK4Integrate( float DeltaTime)
 {
 	// TODO
 	/// Local Variables ///////////////////////////////////////////////////////////   
-	int loop;
-	float       halfDeltaT, sixthDeltaT;
-	tParticle* source, * target, * accum1, * accum2, * accum3, * accum4;
+	//int loop;
+	//float       halfDeltaT, sixthDeltaT, 
+	double halfDelta, oneOverSix;
+	//tParticle* source, * target, * accum1, * accum2, * accum3, * accum4;
 	System cur(m_CurrentSys, m_ParticleCnt);
-	System k1(m_ParticleCnt);
+	//System k1(m_CurrentSys, m_ParticleCnt);
 	System k2(m_ParticleCnt);
 	System k3(m_ParticleCnt);
 	System k4(m_ParticleCnt);
+	System k(m_ParticleCnt);
 	///////////////////////////////////////////////////////////////////////////////   
-	halfDeltaT = DeltaTime / 2.0f;      // SOME TIME VALUES I WILL NEED   
-	sixthDeltaT = 1.0f / 6.0f;
+	halfDelta = DeltaTime / 2.0f;      // SOME TIME VALUES I WILL NEED   
+	//sixthDeltaT = 1.0f / 6.0f;
 
-	// K1
-	IntegrateSysOverTime(cur, cur, k1, DeltaTime);
-	ComputeForces(k1);
+	oneOverSix = 1.0f / 6.0f;
 
-	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
-	target = m_TempSys[0];  // TEMP STORAGE FOR NEW POSITION   
-	accum1 = m_TempSys[1];  // ACCUMULATE THE INTEGRATED VALUES   
-	for (loop = 0; loop < m_ParticleCnt; loop++)
-	{
-		accum1->f.x = halfDeltaT * source->f.x * source->oneOverM;
-		accum1->f.y = halfDeltaT * source->f.y * source->oneOverM;
-		accum1->f.z = halfDeltaT * source->f.z * source->oneOverM;
-
-		accum1->v.x = halfDeltaT * source->v.x;
-		accum1->v.y = halfDeltaT * source->v.y;
-		accum1->v.z = halfDeltaT * source->v.z;
-		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE OVER 1/2 TIME   
-		target->v.x = source->v.x + (accum1->f.x);
-		target->v.y = source->v.y + (accum1->f.y);
-		target->v.z = source->v.z + (accum1->f.z);
-
-		target->oneOverM = source->oneOverM;
-
-		// SET THE NEW POSITION   
-		target->pos.x = source->pos.x + (accum1->v.x);
-		target->pos.y = source->pos.y + (accum1->v.y);
-		target->pos.z = source->pos.z + (accum1->v.z);
-
-		source++;
-		target++;
-		accum1++;
-	}
-
-	ComputeForces(m_TempSys[0]);  // COMPUTE THE NEW FORCES   
-
-	// SECOND STEP   
-	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
-	target = m_TempSys[0];  // TEMP STORAGE FOR NEW POSITION   
-	accum1 = m_TempSys[2];  // ACCUMULATE THE INTEGRATED VALUES   
-	for (loop = 0; loop < m_ParticleCnt; loop++)
-	{
-		accum1->f.x = halfDeltaT * target->f.x * source->oneOverM;
-		accum1->f.y = halfDeltaT * target->f.y * source->oneOverM;
-		accum1->f.z = halfDeltaT * target->f.z * source->oneOverM;
-		accum1->v.x = halfDeltaT * target->v.x;
-		accum1->v.y = halfDeltaT * target->v.y;
-		accum1->v.z = halfDeltaT * target->v.z;
-
-		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE   
-		target->v.x = source->v.x + (accum1->f.x);
-		target->v.y = source->v.y + (accum1->f.y);
-		target->v.z = source->v.z + (accum1->f.z);
-
-		target->oneOverM = source->oneOverM;
-
-		// SET THE NEW POSITION   
-		target->pos.x = source->pos.x + (accum1->v.x);
-		target->pos.y = source->pos.y + (accum1->v.y);
-		target->pos.z = source->pos.z + (accum1->v.z);
-
-		source++;
-		target++;
-		accum1++;
-	}
-
-	ComputeForces(m_TempSys[0]);  // COMPUTE THE NEW FORCES   
-
-	// THIRD STEP   
-	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
-	target = m_TempSys[0];  // TEMP STORAGE FOR NEW POSITION   
-	accum1 = m_TempSys[3];  // ACCUMULATE THE INTEGRATED VALUES   
-	for (loop = 0; loop < m_ParticleCnt; loop++)
-	{
-		// NOTICE I USE THE FULL DELTATIME THIS STEP   
-		accum1->f.x = DeltaTime * target->f.x * source->oneOverM;
-		accum1->f.y = DeltaTime * target->f.y * source->oneOverM;
-		accum1->f.z = DeltaTime * target->f.z * source->oneOverM;
-		accum1->v.x = DeltaTime * target->v.x;
-		accum1->v.y = DeltaTime * target->v.y;
-		accum1->v.z = DeltaTime * target->v.z;
-
-		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE   
-		target->v.x = source->v.x + (accum1->f.x);
-		target->v.y = source->v.y + (accum1->f.y);
-		target->v.z = source->v.z + (accum1->f.z);
-
-		target->oneOverM = source->oneOverM;
-
-		// SET THE NEW POSITION   
-		target->pos.x = source->pos.x + (accum1->v.x);
-		target->pos.y = source->pos.y + (accum1->v.y);
-		target->pos.z = source->pos.z + (accum1->v.z);
-
-		source++;
-		target++;
-		accum1++;
-	}
-
-	ComputeForces(m_TempSys[0]);  // COMPUTE THE NEW FORCES   
-
-	// FOURTH STEP   
-	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
-	target = m_TempSys[0];  // TEMP STORAGE FOR NEW POSITION   
-	accum1 = m_TempSys[4];  // ACCUMULATE THE INTEGRATED VALUES   
-	for (loop = 0; loop < m_ParticleCnt; loop++)
-	{
-		// NOTICE I USE THE FULL DELTATIME THIS STEP   
-		accum1->f.x = DeltaTime * target->f.x * source->oneOverM;
-		accum1->f.y = DeltaTime * target->f.y * source->oneOverM;
-		accum1->f.z = DeltaTime * target->f.z * source->oneOverM;
-
-		accum1->v.x = DeltaTime * target->v.x;
-		accum1->v.y = DeltaTime * target->v.y;
-		accum1->v.z = DeltaTime * target->v.z;
-
-		// THIS TIME I DON'T NEED TO COMPUTE THE TEMPORARY POSITIONS   
-		source++;
-		target++;
-		accum1++;
-	}
-
-	source = m_CurrentSys;  // CURRENT STATE OF PARTICLE   
-	target = m_TargetSys;
-	accum1 = m_TempSys[1];
-	accum2 = m_TempSys[2];
-	accum3 = m_TempSys[3];
-	accum4 = m_TempSys[4];
-	for (loop = 0; loop < m_ParticleCnt; loop++)
-	{
-		// DETERMINE THE NEW VELOCITY FOR THE PARTICLE USING RK4 FORMULA   
-		target->v.x = source->v.x + ((accum1->f.x + ((accum2->f.x + accum3->f.x) * 2.0f) + accum4->f.x) * sixthDeltaT);
-		target->v.y = source->v.y + ((accum1->f.y + ((accum2->f.y + accum3->f.y) * 2.0f) + accum4->f.y) * sixthDeltaT);
-		target->v.z = source->v.z + ((accum1->f.z + ((accum2->f.z + accum3->f.z) * 2.0f) + accum4->f.z) * sixthDeltaT);
-		// DETERMINE THE NEW POSITION FOR THE PARTICLE USING RK4 FORMULA   
-		target->pos.x = source->pos.x + ((accum1->v.x + ((accum2->v.x + accum3->v.x) * 2.0f) + accum4->v.x) * sixthDeltaT);
-		target->pos.y = source->pos.y + ((accum1->v.y + ((accum2->v.y + accum3->v.y) * 2.0f) + accum4->v.y) * sixthDeltaT);
-		target->pos.z = source->pos.z + ((accum1->v.z + ((accum2->v.z + accum3->v.z) * 2.0f) + accum4->v.z) * sixthDeltaT);
-
-		source++;
-		target++;
-		accum1++;
-		accum2++;
-		accum3++;
-		accum4++;
-	}
+	//k1 = cur
+	IntegrateSysOverTime(cur, cur, k2, halfDelta);
+	ComputeForces(k2);
+	IntegrateSysOverTime(cur, k2, k3, halfDelta);
+	ComputeForces(k3);
+	ComputeForces(k3);
+	IntegrateSysOverTime(cur, k3, k4, DeltaTime);
+	ComputeForces(k4);
+	// Average Slope:  
+	k = (cur + k2*2.0 + k3*2.0 + k4) * oneOverSix;
+ 	
+	//ComputeForces(k);
+	IntegrateSysOverTime(cur, k, m_TargetSys, DeltaTime);
 
 }
 
@@ -1163,9 +1035,9 @@ void CPhysEnv::Simulate(float DeltaTime, BOOL running)
 				case RK4_INTEGRATOR:
 					RK4Integrate(TargetTime-CurrentTime);
 					break;
-				// case RK5_INTEGRATOR:
-					//RK5Integrate(TargetTime - CurrentTime);
-					// break;
+				 case RK5_INTEGRATOR:
+					RK5Integrate(TargetTime - CurrentTime);
+					 break;
 				case RK4_ADAPTIVE_INTEGRATOR:
 					RK4AdaptiveIntegrate(TargetTime-CurrentTime);
 					break;

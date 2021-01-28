@@ -110,7 +110,7 @@ public:
 		return ret;
 	}
 	
-	System operator *(float k)
+	System operator *(double k)
 	{
 		// TODO
 		int n = this->particles.size();
