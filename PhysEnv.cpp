@@ -793,8 +793,8 @@ void CPhysEnv::MidPointIntegrate( float DeltaTime)
 
 	// Use these derivatives to compute the state at the end of the interval
 	IntegrateSysOverTime(cur, temp, m_TargetSys, DeltaTime);
+	
 	// let's save the system state
-
 	vector<tParticle> temp_(m_ParticleCnt);
 	memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
 	states.push_back(temp_);
@@ -873,21 +873,17 @@ void CPhysEnv::HeunIntegrate( float DeltaTime)
 
 void CPhysEnv::RK4Integrate( float DeltaTime)
 {
+	
 	// TODO
 	/// Local Variables ///////////////////////////////////////////////////////////   
-	//int loop;
-	//float       halfDeltaT, sixthDeltaT, 
 	double halfDelta, oneOverSix;
-	//tParticle* source, * target, * accum1, * accum2, * accum3, * accum4;
 	System cur(m_CurrentSys, m_ParticleCnt);
-	//System k1(m_CurrentSys, m_ParticleCnt);
 	System k2(m_ParticleCnt);
 	System k3(m_ParticleCnt);
 	System k4(m_ParticleCnt);
 	System k(m_ParticleCnt);
 	///////////////////////////////////////////////////////////////////////////////   
-	halfDelta = DeltaTime / 2.0f;      // SOME TIME VALUES I WILL NEED   
-	//sixthDeltaT = 1.0f / 6.0f;
+	halfDelta = DeltaTime / 2.0f;     
 
 	oneOverSix = 1.0f / 6.0f;
 
@@ -895,7 +891,6 @@ void CPhysEnv::RK4Integrate( float DeltaTime)
 	IntegrateSysOverTime(cur, cur, k2, halfDelta);
 	ComputeForces(k2);
 	IntegrateSysOverTime(cur, k2, k3, halfDelta);
-	ComputeForces(k3);
 	ComputeForces(k3);
 	IntegrateSysOverTime(cur, k3, k4, DeltaTime);
 	ComputeForces(k4);
@@ -954,6 +949,8 @@ void CPhysEnv::RK5Integrate(float DeltaTime)
 	vector<tParticle> temp_(m_ParticleCnt);
 	memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
 	states.push_back(temp_);
+	
+
 }
 
 void CPhysEnv::RK4AdaptiveIntegrate( float DeltaTime)  

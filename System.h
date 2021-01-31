@@ -62,10 +62,10 @@ public:
 		for (int i = 0; i < n; i++)	
 		{
 			ret.particles[i].oneOverM = this->particles[i].oneOverM;
-
-			ret.particles[i].pos.x = this->particles[i].pos.x + other.particles[i].pos.x;
-			ret.particles[i].pos.y = this->particles[i].pos.y + other.particles[i].pos.y;
-			ret.particles[i].pos.z = this->particles[i].pos.z + other.particles[i].pos.z;
+			
+			ret.particles[i].pos.x = this->particles[i].pos.x;
+			ret.particles[i].pos.y = this->particles[i].pos.y;
+			ret.particles[i].pos.z = this->particles[i].pos.z;
 
 			ret.particles[i].v.x = this->particles[i].v.x + other.particles[i].v.x;
 			ret.particles[i].v.y = this->particles[i].v.y + other.particles[i].v.y;
@@ -74,6 +74,7 @@ public:
 			ret.particles[i].f.x = this->particles[i].f.x + other.particles[i].f.x;
 			ret.particles[i].f.y = this->particles[i].f.y + other.particles[i].f.y;
 			ret.particles[i].f.z = this->particles[i].f.z + other.particles[i].f.z;
+			
 		}
 
 		return ret;
@@ -94,9 +95,9 @@ public:
 		{
 			ret.particles[i].oneOverM = this->particles[i].oneOverM;
 
-			ret.particles[i].pos.x = this->particles[i].pos.x - other.particles[i].pos.x;
-			ret.particles[i].pos.y = this->particles[i].pos.y - other.particles[i].pos.y;
-			ret.particles[i].pos.z = this->particles[i].pos.z - other.particles[i].pos.z;
+			ret.particles[i].pos.x = this->particles[i].pos.x;
+			ret.particles[i].pos.y = this->particles[i].pos.y;
+			ret.particles[i].pos.z = this->particles[i].pos.z;
 
 			ret.particles[i].v.x = this->particles[i].v.x - other.particles[i].v.x;
 			ret.particles[i].v.y = this->particles[i].v.y - other.particles[i].v.y;
@@ -105,6 +106,7 @@ public:
 			ret.particles[i].f.x = this->particles[i].f.x - other.particles[i].f.x;
 			ret.particles[i].f.y = this->particles[i].f.y - other.particles[i].f.y;
 			ret.particles[i].f.z = this->particles[i].f.z - other.particles[i].f.z;
+			
 		}
 
 		return ret;
@@ -120,9 +122,9 @@ public:
 		{
 			ret.particles[i].oneOverM = this->particles[i].oneOverM;
 
-			ret.particles[i].pos.x = this->particles[i].pos.x * k;
-			ret.particles[i].pos.y = this->particles[i].pos.y * k;
-			ret.particles[i].pos.z = this->particles[i].pos.z * k;
+			ret.particles[i].pos.x = this->particles[i].pos.x;
+			ret.particles[i].pos.y = this->particles[i].pos.y;
+			ret.particles[i].pos.z = this->particles[i].pos.z;
 
 			ret.particles[i].v.x = this->particles[i].v.x * k;
 			ret.particles[i].v.y = this->particles[i].v.y * k;
@@ -131,6 +133,7 @@ public:
 			ret.particles[i].f.x = this->particles[i].f.x * k;
 			ret.particles[i].f.y = this->particles[i].f.y * k;
 			ret.particles[i].f.z = this->particles[i].f.z * k;
+
 		}
 
 		return ret;
@@ -146,9 +149,9 @@ public:
 		{
 			ret.particles[i].oneOverM = this->particles[i].oneOverM;
 
-			ret.particles[i].pos.x = this->particles[i].pos.x / k;
-			ret.particles[i].pos.y = this->particles[i].pos.y / k;
-			ret.particles[i].pos.z = this->particles[i].pos.z / k;
+			ret.particles[i].pos.x = this->particles[i].pos.x;
+			ret.particles[i].pos.y = this->particles[i].pos.y;
+			ret.particles[i].pos.z = this->particles[i].pos.z;
 
 			ret.particles[i].v.x = this->particles[i].v.x / k;
 			ret.particles[i].v.y = this->particles[i].v.y / k;
