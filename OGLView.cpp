@@ -408,6 +408,7 @@ GLvoid COGLView::drawScene(GLvoid)
 
 void COGLView::OnDestroy() 
 {
+	m_PhysEnv.WriteSystemStates();
 	CWnd::OnDestroy();
 	if (m_hRC)
 		wglDeleteContext(m_hRC);

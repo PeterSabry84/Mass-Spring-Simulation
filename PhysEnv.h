@@ -7,9 +7,11 @@
 // PhysEnv.h : header file
 //
 #include "MathDefs.h"
+#include <vector>
 
 #define EPSILON  0.00001f				// ERROR TERM
 #define DEFAULT_DAMPING		0.002f
+#define N_STATES 1000
 
 enum tCollisionTypes
 {
@@ -114,6 +116,7 @@ public:
 	BOOL				m_DrawShear;			// DRAW SHEAR CLOTH SPRINGS
 	BOOL				m_DrawBend;				// DRAW BEND CLOTH SPRINGS
 	int					m_IntegratorType;
+	void	WriteSystemStates();
 
 // Attributes
 private:
@@ -141,6 +144,8 @@ private:
 	tCollisionSphere	*m_Sphere;
 	int					m_SphereCnt;
 	int t = 0;
+	//add a member state varia ble to hold the systems state 
+	vector< vector<tParticle> > states;		//hold system states thru a trajectory up to a max number defined by N_STATES
 // Operations
 private:
 	inline void	IntegrateSysOverTime(tParticle *initial,tParticle *source, tParticle *target, float deltaTime);
@@ -155,6 +160,7 @@ private:
 	int		CheckForCollisions( tParticle	*system );
 	void	ResolveCollisions( tParticle	*system );
 	void	CompareBuffer(int size, float *buffer,float x, float y);
+	
 	ofstream myfile;
 	char* fname = "adaptivetest2.csv";
 
