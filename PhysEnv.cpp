@@ -1030,7 +1030,7 @@ void CPhysEnv::RK4AdaptiveIntegrate( float DeltaTime)
 	error = temp2 - temp1;
 
 	//let's get an improved accuracy using the error
-	(temp2 + error).fillOut(m_TargetSys);
+	(temp2 + error / 15).fillOut(m_TargetSys);
 	// let's save the system state
 
 	currTimeStep++;
