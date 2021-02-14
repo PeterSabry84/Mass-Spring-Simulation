@@ -985,6 +985,7 @@ void CPhysEnv::RK4AdaptiveIntegrate( float DeltaTime)
 
 	System temp1(m_ParticleCnt);
 	System temp2(m_ParticleCnt);
+	System temp3(m_ParticleCnt);
 
 	float halfDelta, doubleDelta, oneOverSix;
 	System cur(m_CurrentSys, m_ParticleCnt);
@@ -1010,27 +1011,37 @@ void CPhysEnv::RK4AdaptiveIntegrate( float DeltaTime)
 	IntegrateSysOverTime(cur, k, temp1, DeltaTime);
 
 	//Calculate on double interval
-	doubleDelta = DeltaTime * 2;
-	halfDelta = doubleDelta / 2;
+	DeltaTime = DeltaTime / 2;
+	halfDelta = DeltaTime / 2;
 
 	IntegrateSysOverTime(cur, cur, k2, halfDelta);
 	ComputeForces(k2);
 	IntegrateSysOverTime(cur, k2, k3, halfDelta);
 	ComputeForces(k3);
-	IntegrateSysOverTime(cur, k3, k4, doubleDelta);
+	IntegrateSysOverTime(cur, k3, k4, DeltaTime);
 	ComputeForces(k4);
 	// Average Slope:  
 	k = (cur + k2 * 2.0 + k3 * 2.0 + k4) * oneOverSix;
+	IntegrateSysOverTime(cur, k, temp2, DeltaTime);
+	ComputeForces(temp2);
 
-	//ComputeForces(k);
-	IntegrateSysOverTime(cur, k, temp2, doubleDelta);
+	IntegrateSysOverTime(temp2, temp2, k2, halfDelta);
+	ComputeForces(k2);
+	IntegrateSysOverTime(temp2, k2, k3, halfDelta);
+	ComputeForces(k3);
+	IntegrateSysOverTime(temp2, k3, k4, DeltaTime);
+	ComputeForces(k4);
+	// Average Slope:  
+	k = (temp2 + k2 * 2.0 + k3 * 2.0 + k4) * oneOverSix;
+
+	IntegrateSysOverTime(temp2, k, temp3, DeltaTime);
 
 
 	System error(m_ParticleCnt);
-	error = temp2 - temp1;
+	error = temp3 - temp1;
 
 	//let's get an improved accuracy using the error
-	(temp2 + error / 15).fillOut(m_TargetSys);
+	(temp3 + (error / 15)).fillOut(m_TargetSys);
 	// let's save the system state
 
 	currTimeStep++;
