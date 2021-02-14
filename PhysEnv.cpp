@@ -774,7 +774,7 @@ void CPhysEnv::EulerIntegrate(float DeltaTime)
 
 	//Save system state
 	currTimeStep++;
-	if (currTimeStep == 500) {
+	if (currTimeStep == 1500) {
 		vector<tParticle> temp_(m_ParticleCnt);
 		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
 		states.push_back(temp_);
@@ -800,7 +800,7 @@ void CPhysEnv::MidPointIntegrate( float DeltaTime)
 	
 	// let's save the system state
 	currTimeStep++;
-	if (currTimeStep == 500) {
+	if (currTimeStep == 1500) {
 		vector<tParticle> temp_(m_ParticleCnt);
 		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
 		states.push_back(temp_);
@@ -875,7 +875,7 @@ void CPhysEnv::HeunIntegrate( float DeltaTime)
 	// let's save the system state
 
 	currTimeStep++;
-	if (currTimeStep == 500) {
+	if (currTimeStep == 1500) {
 		vector<tParticle> temp_(m_ParticleCnt);
 		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
 		states.push_back(temp_);
@@ -916,7 +916,7 @@ void CPhysEnv::RK4Integrate( float DeltaTime)
 	// let's save the system state
 
 	currTimeStep++;
-	if (currTimeStep == 500) {
+	if (currTimeStep == 1500) {
 		vector<tParticle> temp_(m_ParticleCnt);
 		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
 		states.push_back(temp_);
@@ -964,7 +964,7 @@ void CPhysEnv::RK5Integrate(float DeltaTime)
 	// let's save the system state
 
 	currTimeStep++;
-	if (currTimeStep == 500) {
+	if (currTimeStep == 1500) {
 		vector<tParticle> temp_(m_ParticleCnt);
 		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
 		states.push_back(temp_);
@@ -982,84 +982,59 @@ void CPhysEnv::RK4AdaptiveIntegrate( float DeltaTime)
 	//2. calculate the error by subtracting the two systems and save into a new temp system.
 	//3. update the system output of h/2 by the calculated correction factor (for positions) and save to target.
 
-	DeltaTime = DeltaTime * 2.0f;
 
+	System temp1(m_ParticleCnt);
+	System temp2(m_ParticleCnt);
+
+	float halfDelta, doubleDelta, oneOverSix;
 	System cur(m_CurrentSys, m_ParticleCnt);
 	System k2(m_ParticleCnt);
 	System k3(m_ParticleCnt);
 	System k4(m_ParticleCnt);
-	System k5(m_ParticleCnt);
-	System k6(m_ParticleCnt);
-	System temp1(m_ParticleCnt);
-	System temp2(m_ParticleCnt);
+	System k(m_ParticleCnt);
+	///////////////////////////////////////////////////////////////////////////////   
+	halfDelta = DeltaTime / 2.0f;      
+	
+	oneOverSix = 1.0f / 6.0f;
 
-
-	// Compute the state of the system at k2 and evaluate derivatives at k2
-	IntegrateSysOverTime(cur, cur, k2, DeltaTime / 4.0f);
+	//k1 = cur
+	IntegrateSysOverTime(cur, cur, k2, halfDelta);
 	ComputeForces(k2);
-
-	IntegrateSysOverTime(cur, k2, k3, DeltaTime / 4.0f);
+	IntegrateSysOverTime(cur, k2, k3, halfDelta);
 	ComputeForces(k3);
-
-	IntegrateSysOverTime(cur, k3, k4, DeltaTime / 2.0f);
+	IntegrateSysOverTime(cur, k3, k4, DeltaTime);
 	ComputeForces(k4);
+	// Average Slope:  
+	k = (cur + k2 * 2.0 + k3 * 2.0 + k4) * oneOverSix;
 
-	IntegrateSysOverTime(cur, k4, k5, 0.75f * DeltaTime);
-	ComputeForces(k5);
+	IntegrateSysOverTime(cur, k, temp1, DeltaTime);
 
-	IntegrateSysOverTime(cur, k5, k6, DeltaTime);
-	ComputeForces(k6);
+	//Calculate on double interval
+	doubleDelta = DeltaTime * 2;
+	halfDelta = doubleDelta / 2;
 
-
-	System final_slope(m_ParticleCnt);
-	//final_slope = (k2);
-
-	final_slope = (cur * 7.0f + k3 * 32.0f + k4 * 12.0f + k5 * 32.0f + k6 * 7.0f) / 90.0;
-
-
-	// Use these derivatives to compute the state at the end of the interval
-	IntegrateSysOverTime(cur, final_slope, temp1, DeltaTime);
-
-
-	/// re calculate for half step (which is the original full step)
-
-	float hDeltaTime = DeltaTime / 2.0f;
-
-	IntegrateSysOverTime(cur, cur, k2, hDeltaTime / 4.0f);
+	IntegrateSysOverTime(cur, cur, k2, halfDelta);
 	ComputeForces(k2);
-
-	IntegrateSysOverTime(cur, k2, k3, hDeltaTime / 4.0f);
+	IntegrateSysOverTime(cur, k2, k3, halfDelta);
 	ComputeForces(k3);
-
-	IntegrateSysOverTime(cur, k3, k4, hDeltaTime / 2.0f);
+	IntegrateSysOverTime(cur, k3, k4, doubleDelta);
 	ComputeForces(k4);
+	// Average Slope:  
+	k = (cur + k2 * 2.0 + k3 * 2.0 + k4) * oneOverSix;
 
-	IntegrateSysOverTime(cur, k4, k5, 0.75f * hDeltaTime);
-	ComputeForces(k5);
+	//ComputeForces(k);
+	IntegrateSysOverTime(cur, k, temp2, doubleDelta);
 
-	IntegrateSysOverTime(cur, k5, k6, hDeltaTime);
-	ComputeForces(k6);
-
-
-	//System final_slope(m_ParticleCnt);
-	//final_slope = (k2);
-
-	final_slope = (cur * 7.0f + k3 * 32.0f + k4 * 12.0f + k5 * 32.0f + k6 * 7.0f) / 90.0;
-
-
-	// Use these derivatives to compute the state at the end of the interval
-	IntegrateSysOverTime(cur, final_slope, temp2, DeltaTime);
 
 	System error(m_ParticleCnt);
-	error = temp1 - temp2;
+	error = temp2 - temp1;
 
 	//let's get an improved accuracy using the error
-
-	m_TargetSys = temp2 + error;
+	(temp2 + error).fillOut(m_TargetSys);
 	// let's save the system state
 
 	currTimeStep++;
-	if (currTimeStep == 500) {
+	if (currTimeStep == 1500) {
 		vector<tParticle> temp_(m_ParticleCnt);
 		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
 		states.push_back(temp_);
