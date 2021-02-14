@@ -117,6 +117,7 @@ public:
 	BOOL				m_DrawBend;				// DRAW BEND CLOTH SPRINGS
 	int					m_IntegratorType;
 	void	WriteSystemStates();
+	int		currTimeStep; //Keep Track of environment time step
 
 // Attributes
 private:

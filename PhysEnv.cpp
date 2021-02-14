@@ -94,7 +94,7 @@ CPhysEnv::CPhysEnv()
 	m_CollisionPlane[5].d = m_WorldSizeZ / 2.0f;
 
 	m_SphereCnt = 0;
-	
+	currTimeStep = 0;  //Initialize time step counter
 	myfile.open(fname);
 }
 
@@ -773,9 +773,13 @@ void CPhysEnv::EulerIntegrate(float DeltaTime)
 	IntegrateSysOverTime(cur, cur, m_TargetSys, DeltaTime);
 
 	//Save system state
-	vector<tParticle> temp(m_ParticleCnt);
-	memcpy(temp.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
-	states.push_back(temp);
+	currTimeStep++;
+	if (currTimeStep == 500) {
+		vector<tParticle> temp_(m_ParticleCnt);
+		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
+		states.push_back(temp_);
+		WriteSystemStates();
+	}
 }
 
 void CPhysEnv::MidPointIntegrate( float DeltaTime)
@@ -795,9 +799,13 @@ void CPhysEnv::MidPointIntegrate( float DeltaTime)
 	IntegrateSysOverTime(cur, temp, m_TargetSys, DeltaTime);
 	
 	// let's save the system state
-	vector<tParticle> temp_(m_ParticleCnt);
-	memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
-	states.push_back(temp_);
+	currTimeStep++;
+	if (currTimeStep == 500) {
+		vector<tParticle> temp_(m_ParticleCnt);
+		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
+		states.push_back(temp_);
+		WriteSystemStates();
+	}
 }
 
 /* TODO
@@ -866,9 +874,14 @@ void CPhysEnv::HeunIntegrate( float DeltaTime)
 	temp.fillOut(m_TargetSys);
 	// let's save the system state
 
-	vector<tParticle> temp_(m_ParticleCnt);
-	memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
-	states.push_back(temp_);
+	currTimeStep++;
+	if (currTimeStep == 500) {
+		vector<tParticle> temp_(m_ParticleCnt);
+		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
+		states.push_back(temp_);
+		WriteSystemStates();
+	}
+	
 }
 
 void CPhysEnv::RK4Integrate( float DeltaTime)
@@ -876,6 +889,7 @@ void CPhysEnv::RK4Integrate( float DeltaTime)
 	
 	// TODO
 	/// Local Variables ///////////////////////////////////////////////////////////   
+	
 	double halfDelta, oneOverSix;
 	System cur(m_CurrentSys, m_ParticleCnt);
 	System k2(m_ParticleCnt);
@@ -895,16 +909,19 @@ void CPhysEnv::RK4Integrate( float DeltaTime)
 	IntegrateSysOverTime(cur, k3, k4, DeltaTime);
 	ComputeForces(k4);
 	// Average Slope:  
-	k = (cur + k2*2.0 + k3*2.0 + k4) * oneOverSix;
+	k = (cur + k2 * 2.0f + k3 * 2.0f + k4) * oneOverSix;
  	
-	//ComputeForces(k);
-	IntegrateSysOverTime(cur, k, m_TargetSys, DeltaTime);
-
+	IntegrateSysOverTime(cur, k, m_TargetSys, DeltaTime );
+	
 	// let's save the system state
 
-	vector<tParticle> temp_(m_ParticleCnt);
-	memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
-	states.push_back(temp_);
+	currTimeStep++;
+	if (currTimeStep == 500) {
+		vector<tParticle> temp_(m_ParticleCnt);
+		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
+		states.push_back(temp_);
+		WriteSystemStates();
+	}
 
 }
 
@@ -946,9 +963,13 @@ void CPhysEnv::RK5Integrate(float DeltaTime)
 
 	// let's save the system state
 
-	vector<tParticle> temp_(m_ParticleCnt);
-	memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
-	states.push_back(temp_);
+	currTimeStep++;
+	if (currTimeStep == 500) {
+		vector<tParticle> temp_(m_ParticleCnt);
+		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
+		states.push_back(temp_);
+		WriteSystemStates();
+	}
 	
 
 }
@@ -1037,9 +1058,13 @@ void CPhysEnv::RK4AdaptiveIntegrate( float DeltaTime)
 	m_TargetSys = temp2 + error;
 	// let's save the system state
 
-	vector<tParticle> temp_(m_ParticleCnt);
-	memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
-	states.push_back(temp_);
+	currTimeStep++;
+	if (currTimeStep == 500) {
+		vector<tParticle> temp_(m_ParticleCnt);
+		memcpy(temp_.data(), m_TargetSys, m_ParticleCnt * sizeof(tParticle));
+		states.push_back(temp_);
+		WriteSystemStates();
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
